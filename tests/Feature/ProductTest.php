@@ -91,4 +91,21 @@ class ProductTest extends TestCase
         $this->assertDatabaseHas(Product::class, ['name' => 'my_product']);
     }
 
+    public function test_delete_product()
+    {
+        $this->clearProducts();
+        $product = Product::factory(1)->create();
+
+        $this->deleteJson(route('products.destroy', [$product[0]->_id]))
+            ->assertExactJson([
+                'message' => "delete successfully"
+            ])
+            ->assertSuccessful();
+
+        $this->assertSoftDeleted(Product::class, [
+            'name'      => $product[0]->name,
+            'price'     => $product[0]->price,
+            'inventory' => $product[0]->inventory
+        ]);
+    }
 }
