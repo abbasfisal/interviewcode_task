@@ -2,17 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Auth\Authenticatable;
-use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
-use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Auth\User as Authenticatable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Model implements JWTSubject, AuthenticatableUser
+class User extends Authenticatable implements JWTSubject
 {
 
-    use  Authenticatable, HasFactory, Notifiable;
+    use  HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
