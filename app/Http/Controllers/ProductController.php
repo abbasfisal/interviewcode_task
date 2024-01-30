@@ -22,7 +22,13 @@ class ProductController extends Controller
     {
         $products = $this->repository->index();
 
-        return ProductResource::collection($products);
+        return Response::json(
+            [
+                'messages' => 'product lists',
+                'data'     => ProductResource::collection($products)
+            ],
+            200
+        );
     }
 
     /**
