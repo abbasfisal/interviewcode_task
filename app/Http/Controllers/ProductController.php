@@ -51,7 +51,10 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        //
+        return Response::json([
+            'message' => 'show',
+            'data'    => new ProductResource($product)
+        ]);
     }
 
     /**
