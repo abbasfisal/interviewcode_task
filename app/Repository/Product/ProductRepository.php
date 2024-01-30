@@ -20,4 +20,9 @@ class ProductRepository implements ProductRepositoryInterface
     {
         return $this->product->query()->create($data);
     }
+
+    public function update(Product $product, array $validated)
+    {
+
+    }
 }
