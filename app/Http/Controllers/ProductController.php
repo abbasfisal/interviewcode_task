@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use App\Repository\Product\ProductRepositoryInterface;
+use Illuminate\Support\Facades\Response;
 
 class ProductController extends Controller
 {
@@ -29,7 +30,14 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request)
     {
-        //
+        $product = $this->repository->store($request->validated());
+        return Response::json(
+            [
+                'messages' => 'created',
+                'data'     => new ProductResource($product),
+            ],
+            201
+        );
     }
 
     /**
