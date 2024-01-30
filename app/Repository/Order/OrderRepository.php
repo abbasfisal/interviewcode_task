@@ -82,31 +82,3 @@ class OrderRepository implements OrderRepositoryInterface
 
     }
 }
-//
-//$prodcuts = [ ['id'=>1 , 'inventory'=>20 , 'price'=>20000] ,['id'=>2 , 'inventory'=>32 , 'price'=>1000]];
-//$orders = [ ['id'=>1 , 'count'=>3 ] , ['id'=>2 , 'count'=>4]]   ;
-//
-//$products = [
-//    ['id' => 1, 'inventory' => 20, 'price' => 20000],
-//    ['id' => 2, 'inventory' => 32, 'price' => 1000]
-//];
-//
-//$orders = [
-//    ['id' => 1, 'count' => 3],
-//    ['id' => 2, 'count' => 4]
-//];
-//
-//// Create associative arrays based on 'id' for products and orders
-//$productMap = array_column($products, null, 'id');
-//$orderMap = array_column($orders, null, 'id');
-//
-//// Merge the arrays based on 'id'
-//$mergedArray = [];
-//foreach ($productMap as $productId => $productInfo) {
-//    if (isset($orderMap[$productId])) {
-//        $mergedArray[] = array_merge($productInfo, $orderMap[$productId]);
-//    }
-//}
-//
-//// Print the merged array
-//print_r($mergedArray);
