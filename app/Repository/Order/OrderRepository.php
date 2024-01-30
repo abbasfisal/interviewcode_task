@@ -17,7 +17,9 @@ class OrderRepository implements OrderRepositoryInterface
 
     public function index(): Collection|array
     {
-
+        return Order::query()
+            ->where('user_id', Auth::id())
+            ->get();
     }
 
     public function store(array $data)
@@ -63,7 +65,7 @@ class OrderRepository implements OrderRepositoryInterface
             //DB::commit();
             return $order;
         } catch (\Exception $exception) {
-          //  DB::rollBack();
+            //  DB::rollBack();
             throw $exception;
         }
 
