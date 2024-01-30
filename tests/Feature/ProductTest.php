@@ -45,4 +45,27 @@ class ProductTest extends TestCase
         $this->assertDatabaseCount(Product::class, 1);
 
     }
+
+    public function test_product_show()
+    {
+        $this->clearProducts();
+        Product::factory(10)->create();
+
+        /** @var Product $product */
+        $product = Product::query()->first();
+
+        $response = $this->getJson(route('products.show', $product->_id));
+
+        $response->assertExactJson([
+            'data'    => [
+                'name'      => $product->name,
+                'price'     => $product->price,
+                'inventory' => $product->inventory
+            ],
+            'message' => "show"])
+            ->assertStatus(200);
+
+        $this->assertDatabaseCount(Product::class, 10);
+
+    }
 }
