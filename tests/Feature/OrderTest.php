@@ -115,4 +115,63 @@ class OrderTest extends TestCase
             ->assertStatus(422);
 
     }
+
+    public function test_index()
+    {
+        $this->clearProducts();
+        $loginUser = User::factory()->create();
+        $products = Product::factory(3)->create()->toArray();
+
+        $firstOrderCount = rand(1, 9);
+        $secondOrderCount = rand(1, 9);
+
+        $this->actingAs($loginUser)
+            ->postJson(route('orders.store'),
+                [
+                    'products' => [
+                        [
+                            'product_id' => $products[0]['_id'],
+                            'name'       => $products[0]['name'],
+                            'count'      => $firstOrderCount,
+                            'price'      => $products[0]['price'],
+                        ],
+                        [
+                            'product_id' => $products[1]['_id'],
+                            'name'       => $products[1]['name'],
+                            'count'      => $secondOrderCount,
+                            'price'      => $products[1]['price'],
+                        ]
+                    ]
+                ]
+            );
+
+        $order = Order::query()->where('user_id', Auth::id())->first();
+
+        $this->actingAs($loginUser)
+            ->getJson(route('orders.index'))
+            ->assertStatus(200)
+            ->assertJson([
+                'message' => 'order lists',
+                'data'    => [
+                    [
+                        'order_id'    => $order->_id,
+                        'products'    => [
+                            [
+                                'product_id' => $products[0]['_id'],
+                                'name'       => $products[0]['name'],
+                                'count'      => $firstOrderCount,
+                                'price'      => $products[0]['price']
+                            ],
+                            [
+                                'product_id' => $products[1]['_id'],
+                                'name'       => $products[1]['name'],
+                                'count'      => $secondOrderCount,
+                                'price'      => $products[1]['price']
+                            ]
+                        ],
+                        'total_price' => $order->total_price
+                    ]
+                ]
+            ]);
+    }
 }
