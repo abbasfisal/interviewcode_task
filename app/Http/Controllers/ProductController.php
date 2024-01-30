@@ -62,7 +62,11 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, Product $product)
     {
-        //
+        $product = $this->repository->update($product, $request->validated());
+        return Response::json([
+            'message' => 'update successfully',
+            'data'    => new ProductResource($product)
+        ]);
     }
 
     /**
