@@ -21,8 +21,9 @@ class ProductRepository implements ProductRepositoryInterface
         return $this->product->query()->create($data);
     }
 
-    public function update(Product $product, array $validated)
+    public function update(Product $product, array $data)
     {
-
+        $this->product->query()->update($data);
+        return $product->refresh();
     }
 }

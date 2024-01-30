@@ -10,5 +10,5 @@ interface ProductRepositoryInterface
 
     public function store(array $data);
 
-    public function update(Product $product, array $validated);
+    public function update(Product $product, array $data);
 }
