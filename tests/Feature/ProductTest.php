@@ -68,4 +68,27 @@ class ProductTest extends TestCase
         $this->assertDatabaseCount(Product::class, 10);
 
     }
+
+    public function test_update_product()
+    {
+        $this->clearProducts();
+        $product = Product::factory(1)->create();
+
+        $this->patchJson(route('products.update', [$product[0]->_id]), [
+            'name' => 'my_product'
+        ])
+            ->assertExactJson([
+                'data'    => [
+                    'name'      => 'my_product',
+                    'price'     => $product[0]->price,
+                    'inventory' => $product[0]->inventory
+                ],
+                'message' => "update successfully"])
+            ->assertStatus(200);
+
+
+        $this->assertDatabaseCount(Product::class, 1);
+        $this->assertDatabaseHas(Product::class, ['name' => 'my_product']);
+    }
+
 }
