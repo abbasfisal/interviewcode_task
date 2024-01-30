@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Repository\Order\OrderRepositoryInterface;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Response;
 
 class OrderController extends Controller
@@ -15,12 +16,14 @@ class OrderController extends Controller
     {
     }
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+
+    public function index(): JsonResponse
     {
-        //
+        $orders = $this->orderRepository->index();
+        return Response::json([
+            'message' => 'order lists',
+            'data'    => OrderResource::collection($orders)
+        ]);
     }
 
     /**
@@ -30,8 +33,8 @@ class OrderController extends Controller
     {
         $order = $this->orderRepository->store($request->validated());
         return Response::json([
-            'message'=>'created',
-            'data'=>new OrderResource($order)
+            'message' => 'created',
+            'data'    => new OrderResource($order)
         ]);
     }
 
