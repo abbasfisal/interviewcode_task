@@ -74,6 +74,7 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        //
+        $this->repository->destory($product);
+        return Response::json(['message' => 'delete successfully']);
     }
 }
