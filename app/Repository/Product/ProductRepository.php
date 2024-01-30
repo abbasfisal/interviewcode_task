@@ -15,4 +15,9 @@ class ProductRepository implements ProductRepositoryInterface
     {
         return $this->product->query()->get();
     }
+
+    public function store(array $data)
+    {
+        return $this->product->query()->create($data);
+    }
 }
