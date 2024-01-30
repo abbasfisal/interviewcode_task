@@ -26,4 +26,9 @@ class ProductRepository implements ProductRepositoryInterface
         $this->product->query()->update($data);
         return $product->refresh();
     }
+
+    public function destory(Product $product)
+    {
+        $product->delete();
+    }
 }
