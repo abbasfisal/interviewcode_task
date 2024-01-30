@@ -5,9 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Models\Order;
+use App\Repository\Order\OrderRepositoryInterface;
 
 class OrderController extends Controller
 {
+    public function __construct(private readonly OrderRepositoryInterface $orderRepository)
+    {
+    }
+
     /**
      * Display a listing of the resource.
      */
