@@ -6,15 +6,21 @@ use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
+use App\Repository\Product\ProductRepositoryInterface;
 
 class ProductController extends Controller
 {
+    public function __construct(private ProductRepositoryInterface $repository)
+    {
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $products = Product::all();
+        $products = $this->repository->index();
+
         return ProductResource::collection($products);
     }
 
