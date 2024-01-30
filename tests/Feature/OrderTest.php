@@ -82,4 +82,37 @@ class OrderTest extends TestCase
         ]);
 
     }
+
+    public function test_out_of_stock()
+    {
+
+        $this->clearProducts();
+
+        $products = Product::factory(3)->create()->toArray();
+
+        $firstOrderCount = rand(1, 9);
+        $secondOrderCount = rand(1, 9);
+
+        $this->actingAs(User::factory()->create())
+            ->postJson(route('orders.store'),
+                [
+                    'products' => [
+                        [
+                            'product_id' => $products[0]['_id'],
+                            'name'       => $products[0]['name'],
+                            'count'      => $firstOrderCount,
+                            'price'      => $products[0]['price'],
+                        ],
+                        [
+                            'product_id' => $products[1]['_id'],
+                            'name'       => $products[1]['name'],
+                            'count'      => $secondOrderCount * 5000,
+                            'price'      => $products[1]['price'],
+                        ]
+                    ]
+                ]
+            )
+            ->assertStatus(422);
+
+    }
 }
