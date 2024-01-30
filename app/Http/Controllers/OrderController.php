@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
+use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Repository\Order\OrderRepositoryInterface;
+use Illuminate\Support\Facades\Response;
 
 class OrderController extends Controller
 {
@@ -26,7 +28,11 @@ class OrderController extends Controller
      */
     public function store(StoreOrderRequest $request)
     {
-
+        $order = $this->orderRepository->store($request->validated());
+        return Response::json([
+            'message'=>'created',
+            'data'=>new OrderResource($order)
+        ]);
     }
 
     /**
