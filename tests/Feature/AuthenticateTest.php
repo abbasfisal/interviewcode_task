@@ -26,11 +26,16 @@ class AuthenticateTest extends TestCase
             'password_confirmation' => 'password'
         ];
 
-        $response = $this->postJson(route('register'), $data)
+        $this->postJson(route('register'), $data)
+            ->assertStatus(200)
             ->assertJsonStructure([
                 'access_token',
                 'token_type',
                 'expires_in'
             ]);
+        $this->assertDatabaseHas(User::class, [
+            'name'  => 'alireza',
+            'email' => 'alireza@gmail.com',
+        ]);
     }
 }
