@@ -13,10 +13,6 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class OrderRepository implements OrderRepositoryInterface
 {
-    public function __construct(private readonly Order $order)
-    {
-    }
-
     public function index(): Collection|array
     {
         return Order::query()
