@@ -50,7 +50,7 @@ class OrderController extends Controller
         //
     }
 
-    public function destroy(Order $order)
+    public function destroy(Order $order , OrderShowRequest $request)
     {
         //
     }
