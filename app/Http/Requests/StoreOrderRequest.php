@@ -25,9 +25,7 @@ class StoreOrderRequest extends FormRequest
         return [
             'products'              => ['required', 'array'],
             'products.*.product_id' => ['required'],
-            'products.*.name'       => ['required'],
             'products.*.count'      => ['required', 'integer'],
-            'products.*.price'      => ['required', 'integer']
         ];
     }
 }
