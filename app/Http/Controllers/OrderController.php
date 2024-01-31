@@ -27,9 +27,6 @@ class OrderController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreOrderRequest $request)
     {
         $order = $this->orderRepository->store($request->validated());
@@ -39,36 +36,20 @@ class OrderController extends Controller
         ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Order $order , OrderShowRequest $request)
+    public function show(Order $order, OrderShowRequest $request)
     {
         return Response::json([
-            'message'=>'order show',
-            'data'=>new OrderResource($order)
+            'message' => 'order show',
+            'data'    => new OrderResource($order)
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Order $order)
-    {
-        //
-    }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateOrderRequest $request, Order $order)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Order $order)
     {
         //
