@@ -174,4 +174,97 @@ class OrderTest extends TestCase
                 ]
             ]);
     }
+
+    public function test_unauthorized_show()
+    {
+        $this->clearProducts();
+        $loginUser = User::factory()->create();
+        $products = Product::factory(3)->create()->toArray();
+
+        $firstOrderCount = rand(1, 9);
+        $secondOrderCount = rand(1, 9);
+
+        $this->actingAs($loginUser)
+            ->postJson(route('orders.store'),
+                [
+                    'products' => [
+                        [
+                            'product_id' => $products[0]['_id'],
+                            'name'       => $products[0]['name'],
+                            'count'      => $firstOrderCount,
+                            'price'      => $products[0]['price'],
+                        ],
+                        [
+                            'product_id' => $products[1]['_id'],
+                            'name'       => $products[1]['name'],
+                            'count'      => $secondOrderCount,
+                            'price'      => $products[1]['price'],
+                        ]
+                    ]
+                ]
+            );
+
+        $order = Order::query()->where('user_id', Auth::id())->first();
+
+        $this->actingAs(User::factory()->create())
+            ->get(route('orders.show', $order->_id))
+            ->assertStatus(403);
+
+    }
+
+    public function test_show()
+    {
+        $this->clearProducts();
+        $loginUser = User::factory()->create();
+        $products = Product::factory(3)->create()->toArray();
+
+        $firstOrderCount = rand(1, 9);
+        $secondOrderCount = rand(1, 9);
+
+        $this->actingAs($loginUser)
+            ->postJson(route('orders.store'),
+                [
+                    'products' => [
+                        [
+                            'product_id' => $products[0]['_id'],
+                            'name'       => $products[0]['name'],
+                            'count'      => $firstOrderCount,
+                            'price'      => $products[0]['price'],
+                        ],
+                        [
+                            'product_id' => $products[1]['_id'],
+                            'name'       => $products[1]['name'],
+                            'count'      => $secondOrderCount,
+                            'price'      => $products[1]['price'],
+                        ]
+                    ]
+                ]
+            );
+
+        $order = Order::query()->where('user_id', Auth::id())->first();
+
+        $this->actingAs($loginUser)
+            ->get(route('orders.show', $order->_id))
+            ->assertJson([
+                'message' => 'order show',
+                'data'    => [
+                    'order_id'    => $order->_id,
+                    'products'    => [
+                        [
+                            'product_id' => $products[0]['_id'],
+                            'name'       => $products[0]['name'],
+                            'price'      => $products[0]['price'],
+                            'count'      => $firstOrderCount,
+                        ],
+                        [
+                            'product_id' => $products[1]['_id'],
+                            'name'       => $products[1]['name'],
+                            'price'      => $products[1]['price'],
+                            'count'      => $secondOrderCount,
+                        ]
+                    ],
+                    'total_price' => $order->total_price
+                ]
+            ]);
+    }
 }
