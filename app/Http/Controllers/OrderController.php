@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\OrderShowRequest;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Resources\OrderResource;
@@ -41,9 +42,12 @@ class OrderController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Order $order)
+    public function show(Order $order , OrderShowRequest $request)
     {
-        //
+        return Response::json([
+            'message'=>'order show',
+            'data'=>new OrderResource($order)
+        ]);
     }
 
     /**
