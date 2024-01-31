@@ -99,7 +99,9 @@ return [
             'database' => env('DB_DATABASE', 'interviewdb'),
             'username' => env('DB_USERNAME'),
             'password' => env('DB_PASSWORD'),
-            'options' => [
+            'options'  => [
+               'replicaSet' => 'rs0',
+                'database' => 'admin'
                 //'appname' => 'homestead',
             ],
         ],
