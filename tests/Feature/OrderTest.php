@@ -305,4 +305,54 @@ class OrderTest extends TestCase
 
     }
 
+    public function test_destroy()
+    {
+        $this->clearProducts();
+        $loginUser = User::factory()->create();
+        $products = Product::factory(2)->create();
+
+        $oldProductOneInventory = $products[0]->inventory;
+        $oldProductTowInventory = $products[1]->inventory;
+
+        $firstOrderCount = rand(1, 9);
+        $secondOrderCount = rand(1, 9);
+        dump($oldProductOneInventory, $oldProductTowInventory, $firstOrderCount, $secondOrderCount);
+        $this->actingAs($loginUser)
+            ->postJson(route('orders.store'),
+                [
+                    'products' => [
+                        [
+                            'product_id' => $products[0]->_id,
+                            'name'       => $products[0]->name,
+                            'count'      => $firstOrderCount,
+                            'price'      => $products[0]->price,
+                        ],
+                        [
+                            'product_id' => $products[1]->_id,
+                            'name'       => $products[1]->name,
+                            'count'      => $secondOrderCount,
+                            'price'      => $products[1]->price,
+                        ]
+                    ]
+                ]
+            );
+
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[0]->_id, 'inventory' => $oldProductOneInventory - $firstOrderCount]);
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[1]->_id, 'inventory' => $oldProductTowInventory - $secondOrderCount]);
+
+        $order = Order::query()->where('user_id', Auth::id())->first();
+
+
+        $this->actingAs($loginUser)
+            ->deleteJson(route('orders.destroy', $order->_id))
+            ->assertJson([
+                'message' => 'delete successfully',
+            ]);
+
+        $this->assertSoftDeleted(Order::class, ['_id' => $order->_id]);
+
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[0]->_id, 'inventory' => $oldProductOneInventory]);
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[1]->_id, 'inventory' => $oldProductTowInventory]);
+    }
+
 }
