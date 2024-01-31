@@ -38,4 +38,18 @@ class AuthenticateTest extends TestCase
             'email' => 'alireza@gmail.com',
         ]);
     }
+
+    public function test_login_with_email_password()
+    {
+        $this->test_register();
+
+        $this->postJson(route('login'), ['email' => 'alireza@gmail.com', 'password' => 'password'])
+            ->assertStatus(200)
+            ->assertJsonStructure([
+                'access_token',
+                'token_type',
+                'expires_in'
+            ]);
+
+    }
 }
