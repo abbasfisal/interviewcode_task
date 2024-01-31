@@ -48,7 +48,6 @@ class OrderRepository implements OrderRepositoryInterface
 
     public function destroy(Order $order)
     {
-        //todo: solve transaction problem
         DB::beginTransaction();
         try {
             foreach ($order->products as $item) {
