@@ -5,7 +5,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
-Route::apiResource('products', ProductController::class);
+Route::apiResource('products', ProductController::class)->middleware(['api', 'auth']);
 Route::apiResource('orders', OrderController::class)->middleware(['api', 'auth']);
 
 Route::group(['middleware' => ['api'], 'prefix' => 'auth'], function () {
