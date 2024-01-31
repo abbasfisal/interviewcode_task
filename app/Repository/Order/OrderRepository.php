@@ -6,8 +6,8 @@ use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class OrderRepository implements OrderRepositoryInterface
 {
@@ -81,6 +81,22 @@ class OrderRepository implements OrderRepositoryInterface
 
     public function destroy(Order $order)
     {
+        //todo: solve transaction problem
+        // DB::beginTransaction();
+        try {
+            foreach ($order->products as $item) {
+                /** @var Product $product */
+                $product = Product::query()->where('_id', $item['product_id'])->first();
+
+                $product->inventory += $item['count'];
+                $product->save();
+            }
+            $order->delete();
+            // DB::commit();
+        } catch (\Exception $exception) {
+            // DB::rollBack();
+            throw new BadRequestHttpException($exception->getMessage());
+        }
 
     }
 }
