@@ -58,9 +58,10 @@ class ProductTest extends TestCase
 
         $response->assertExactJson([
             'data'    => [
-                'name'      => $product->name,
-                'price'     => $product->price,
-                'inventory' => $product->inventory
+                'product_id' => $product->_id,
+                'name'       => $product->name,
+                'price'      => $product->price,
+                'inventory'  => $product->inventory
             ],
             'message' => "show"])
             ->assertStatus(200);
@@ -79,9 +80,10 @@ class ProductTest extends TestCase
         ])
             ->assertExactJson([
                 'data'    => [
-                    'name'      => 'my_product',
-                    'price'     => $product[0]->price,
-                    'inventory' => $product[0]->inventory
+                    'product_id' => $product[0]->_id,
+                    'name'       => 'my_product',
+                    'price'      => $product[0]->price,
+                    'inventory'  => $product[0]->inventory
                 ],
                 'message' => "update successfully"])
             ->assertStatus(200);
