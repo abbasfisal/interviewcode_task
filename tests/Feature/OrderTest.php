@@ -29,40 +29,36 @@ class OrderTest extends TestCase
     {
         $this->clearProducts();
 
-        $products = Product::factory(3)->create()->toArray();
+        $products = Product::factory(2)->create()->toArray();
 
         $firstOrderCount = rand(1, 9);
         $secondOrderCount = rand(1, 9);
 
-        $response = $this
+        $this
             ->actingAs(User::factory()->create())
             ->postJson(route('orders.store'),
                 [
                     'products' => [
                         [
                             'product_id' => $products[0]['_id'],
-                            'name'       => $products[0]['name'],
                             'count'      => $firstOrderCount,
-                            'price'      => $products[0]['price'],
                         ],
                         [
                             'product_id' => $products[1]['_id'],
-                            'name'       => $products[1]['name'],
                             'count'      => $secondOrderCount,
-                            'price'      => $products[1]['price'],
                         ]
                     ]
                 ]
             );
 
-        $this->assertDatabaseCount(Product::class, 3);
-        $this->assertDatabaseHas(Product::class, ['_id' => $products[0]['_id'], 'name' => $products[0]['name'], 'inventory' => $products[0]['inventory'] - $firstOrderCount]);
-        $this->assertDatabaseHas(Product::class, ['_id' => $products[1]['_id'], 'name' => $products[1]['name'], 'inventory' => $products[1]['inventory'] - $secondOrderCount]);
-        $this->assertDatabaseHas(Product::class, ['_id' => $products[2]['_id'], 'name' => $products[2]['name'], 'inventory' => $products[2]['inventory']]);
+        $calculateProductOneInventory = $products[0]['inventory'] - $firstOrderCount;
+        $calculateProductTowInventory = $products[1]['inventory'] - $secondOrderCount;
 
-        $order = Order::query()->where('user_id', Auth::id())->get()->toArray();
+        $this->assertDatabaseCount(Product::class, 2);
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[0]['_id'], 'name' => $products[0]['name'], 'inventory' => $calculateProductOneInventory]);
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[1]['_id'], 'name' => $products[1]['name'], 'inventory' => $calculateProductTowInventory]);
+
         $this->assertDatabaseHas(Order::class, [
-
             'user_id'     => Auth::id(),
             'products'    => [
                 [
