@@ -27,7 +27,7 @@ class OrderController extends Controller
         ]);
     }
 
-    public function store(StoreOrderRequest $request)
+    public function store(StoreOrderRequest $request): JsonResponse
     {
         $order = $this->orderRepository->store($request->validated());
         return Response::json([
@@ -36,7 +36,7 @@ class OrderController extends Controller
         ]);
     }
 
-    public function show(Order $order, OrderShowRequest $request)
+    public function show(Order $order, OrderShowRequest $request): JsonResponse
     {
         return Response::json([
             'message' => 'order show',
@@ -50,8 +50,9 @@ class OrderController extends Controller
         //
     }
 
-    public function destroy(Order $order , OrderShowRequest $request)
+    public function destroy(Order $order, OrderShowRequest $request): JsonResponse
     {
-        //
+        $this->orderRepository->destroy($order);
+        return Response::json(['message' => 'delete successfully']);
     }
 }
