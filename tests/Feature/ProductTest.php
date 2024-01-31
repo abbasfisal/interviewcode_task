@@ -19,9 +19,12 @@ class ProductTest extends TestCase
     public function test_index(): void
     {
         $this->clearProducts();
+        $token = $this->login_user();
         Product::factory(10)->create();
 
-        $response = $this->get(route('products.index'));
+        $response = $this
+            ->withToken($token)
+            ->getJson(route('products.index'));
 
         $this->assertDatabaseCount(Product::class, 10);
 
@@ -30,17 +33,44 @@ class ProductTest extends TestCase
 
     public function test_store_validation()
     {
-        $response = $this->postJson(route('products.store'));
+        $this->clearProducts();
+        $token = $this->login_user();
+
+        $response = $this
+            ->withToken($token)
+            ->postJson(route('products.store'));
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
         $response->assertJsonMissingValidationErrors(['errors.name', 'errors.price', 'errors.inventory']);
+    }
+
+    public function login_user()
+    {
+        $data = [
+            'name'                  => 'alireza',
+            'email'                 => 'alireza@gmail.com',
+            'password'              => 'password',
+            'password_confirmation' => 'password'
+        ];
+
+        return $this->postJson(route('register'), $data)
+            ->assertStatus(200)
+            ->assertJsonStructure([
+                'access_token',
+                'token_type',
+                'expires_in'
+            ])->json('access_token');
+
     }
 
     public function test_store_product()
     {
         $this->clearProducts();
+        $token = $this->login_user();
         $product_data = ['name' => 'product one', 'price' => 20000, 'inventory' => 200];
 
-        $response = $this->postJson(route('products.store'), $product_data);
+        $response = $this
+            ->withToken($token)
+            ->postJson(route('products.store'), $product_data);
         $response->assertStatus(201);
         $this->assertDatabaseCount(Product::class, 1);
 
@@ -49,12 +79,15 @@ class ProductTest extends TestCase
     public function test_product_show()
     {
         $this->clearProducts();
+        $token = $this->login_user();
         Product::factory(10)->create();
 
         /** @var Product $product */
         $product = Product::query()->first();
 
-        $response = $this->getJson(route('products.show', $product->_id));
+        $response = $this
+            ->withToken($token)
+            ->getJson(route('products.show', $product->_id));
 
         $response->assertExactJson([
             'data'    => [
@@ -73,11 +106,14 @@ class ProductTest extends TestCase
     public function test_update_product()
     {
         $this->clearProducts();
+        $token = $this->login_user();
         $product = Product::factory(1)->create();
 
-        $this->patchJson(route('products.update', [$product[0]->_id]), [
-            'name' => 'my_product'
-        ])
+        $this
+            ->withToken($token)
+            ->patchJson(route('products.update', [$product[0]->_id]), [
+                'name' => 'my_product'
+            ])
             ->assertExactJson([
                 'data'    => [
                     'product_id' => $product[0]->_id,
@@ -96,9 +132,12 @@ class ProductTest extends TestCase
     public function test_delete_product()
     {
         $this->clearProducts();
+        $token = $this->login_user();
         $product = Product::factory(1)->create();
 
-        $this->deleteJson(route('products.destroy', [$product[0]->_id]))
+        $this
+            ->withToken($token)
+            ->deleteJson(route('products.destroy', [$product[0]->_id]))
             ->assertExactJson([
                 'message' => "delete successfully"
             ])
