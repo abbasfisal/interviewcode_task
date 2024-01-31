@@ -49,7 +49,7 @@ class OrderRepository implements OrderRepositoryInterface
     public function destroy(Order $order)
     {
         //todo: solve transaction problem
-        // DB::beginTransaction();
+        DB::beginTransaction();
         try {
             foreach ($order->products as $item) {
                 /** @var Product $product */
@@ -59,9 +59,9 @@ class OrderRepository implements OrderRepositoryInterface
                 $product->save();
             }
             $order->delete();
-            // DB::commit();
+            DB::commit();
         } catch (\Exception $exception) {
-            // DB::rollBack();
+            DB::rollBack();
             throw new BadRequestHttpException($exception->getMessage());
         }
 
