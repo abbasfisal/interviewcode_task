@@ -5,7 +5,9 @@ namespace App\Repository\Order;
 use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
@@ -22,56 +24,21 @@ class OrderRepository implements OrderRepositoryInterface
             ->get();
     }
 
+    /**
+     * @throws ValidationException
+     * @throws \Exception
+     */
     public function store(array $data)
     {
-        //todo: active replica for transaction
-        //DB::beginTransaction();
-        $product_ids = array_column($data['products'], 'product_id');
-        $p = Product::query()->whereIn('_id', $product_ids)->lockForUpdate()->get()->toArray();
+        DB::beginTransaction();
 
-        $productMap = array_column($p, null, '_id');
-        $orderMap = array_column($data['products'], null, 'product_id');
+        $orderProducts = array_column($data['products'], null, 'product_id');
 
-        // $mergedArray = [];
-        $total_price = 0;
+        $products = Product::query()->whereIn('_id', array_keys($orderProducts))->lockForUpdate()->get();
 
-        foreach ($productMap as $productId => $productInfo) {
-            if (isset($orderMap[$productId])) {
+        $total_price = $this->checkOutOfStock($products, $orderProducts);
 
-                $calculateInventory = $productInfo['inventory'] - $orderMap[$productId]['count'];
-                if ($calculateInventory <= 0) {
-                    throw ValidationException::withMessages(['product' => __('validation.out_of_stock'), ['data' => $productInfo]]);
-                }
-                $total_price += $productInfo['price'] * $orderMap[$productId]['count'];
-                //$mergedArray[] = array_merge($productInfo, $orderMap[$productId]);
-            }
-        }
-
-        try {
-
-            foreach ($productMap as $productId => $productInfo) {
-                if (isset($orderMap[$productId])) {
-                    Product::query()->where('_id', $productId)
-                        ->update(['inventory' => $productInfo['inventory'] - $orderMap[$productId]['count']]);
-                }
-            }
-            $order = Order::query()->create([
-                'user_id'     => Auth::id(),
-                'products'    => $data['products'],
-                'total_price' => $total_price
-            ]);
-
-
-            //DB::commit();
-            return $order;
-        } catch (\Exception $exception) {
-            //  DB::rollBack();
-            throw $exception;
-        }
-
-
-        // dd($total_price, $data['products']);
-
+        return $this->updateProductAndCreateOrder($products, $orderProducts, $total_price);
 
     }
 
@@ -98,5 +65,73 @@ class OrderRepository implements OrderRepositoryInterface
             throw new BadRequestHttpException($exception->getMessage());
         }
 
+    }
+
+
+    /**
+     * @param Collection $products
+     * @param array $orderProducts
+     * @return int
+     * @throws ValidationException
+     */
+    public function checkOutOfStock(Collection $products, array $orderProducts): int
+    {
+        $total_price = 0;
+        /** @var Product $item */
+        foreach ($products as $item) {
+            if (isset($orderProducts[$item->_id])) {
+
+                $orderCount = $orderProducts[$item->_id]['count'];
+                $calculateInventory = $item->inventory - $orderCount;
+
+                if ($calculateInventory <= 0) {
+                    throw ValidationException::withMessages(['product' => __('validation.out_of_stock'), ['data' => $item->_id]]);
+                }
+                $total_price += $item->price * $orderCount;
+            }
+        }
+        return $total_price;
+    }
+
+    /**
+     * @param Collection|array $products
+     * @param array $orderProducts
+     * @param int $total_price
+     * @return \Illuminate\Database\Eloquent\Builder|Model
+     * @throws \Exception
+     */
+    public function updateProductAndCreateOrder(Collection|array $products, array $orderProducts, int $total_price): \Illuminate\Database\Eloquent\Builder|Model
+    {
+        try {
+            $product_data = [];
+            foreach ($products as $item) {
+
+                if (isset($orderProducts[$item->_id])) {
+
+                    $orderCount = $orderProducts[$item->_id]['count'];
+                    $calculateInventory = $item->inventory - $orderCount;
+                    $item->update(['inventory' => $calculateInventory]);
+
+                    $product_data[] = [
+                        'product_id' => $item->_id,
+                        'name'       => $item->name,
+                        'count'      => $orderCount,
+                        'price'      => $item->price
+                    ];
+                }
+            }
+
+            $order = Order::query()->create([
+                'user_id'     => Auth::id(),
+                'products'    => $product_data,
+                'total_price' => $total_price
+            ]);
+
+            DB::commit();
+            return $order;
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            throw $exception;
+        }
     }
 }
