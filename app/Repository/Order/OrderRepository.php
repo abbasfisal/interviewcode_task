@@ -79,7 +79,7 @@ class OrderRepository implements OrderRepositoryInterface
     {
     }
 
-    public function destory(Order $product)
+    public function destroy(Order $product)
     {
 
     }
