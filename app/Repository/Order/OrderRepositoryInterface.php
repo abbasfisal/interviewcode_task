@@ -12,4 +12,6 @@ interface OrderRepositoryInterface
 
     public function destroy(Order $order);
 
+    public function update(Order $order, array $data);
+
 }
