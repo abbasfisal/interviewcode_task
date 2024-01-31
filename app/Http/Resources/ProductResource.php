@@ -17,10 +17,10 @@ class ProductResource extends JsonResource
     {
         /** @var Product $this */
         return [
-            'product_id'=>$this->_id,
-            'name'      => $this->name,
-            'price'     => $this->price,
-            'inventory' => $this->inventory
+            'product_id' => $this->_id,
+            'name'       => $this->name,
+            'price'      => $this->price,
+            'inventory'  => $this->inventory
         ];
     }
 }
