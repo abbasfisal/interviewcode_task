@@ -10,6 +10,6 @@ interface OrderRepositoryInterface
 
     public function index();
 
-    public function destroy(Order $product);
+    public function destroy(Order $order);
 
 }
