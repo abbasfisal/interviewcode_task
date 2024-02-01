@@ -47,8 +47,8 @@ class OrderController extends Controller
 
     public function update(UpdateOrderRequest $request, Order $order)
     {
-       $order = $this->orderRepository->update($order , $request->validated());
-        Response::json([
+        $order = $this->orderRepository->update($order, $request->validated());
+        return Response::json([
             'message' => 'order updated',
             'data'    => new OrderResource($order)
         ]);
