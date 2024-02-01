@@ -76,6 +76,16 @@ namespace App\Documents\Product;
  *     @OA\Parameter(name="id",in="path",required=true,description="product id",@OA\Schema(type="string")),
  *     @OA\Response(response=200,description="OK")
  * )
+ *
+ *  * @OA\Get(
+ *     path="/api/products/{id}",
+ *     tags={"Product"},
+ *     summary="Show Product by id" ,
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(name="id",in="path",required=true,description="order id",@OA\Schema(type="string")),
+ *     @OA\Response(response=200,description="OK")
+ * )
+ *
  */
 class Product
 {
