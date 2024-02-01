@@ -34,6 +34,29 @@ namespace App\Documents\Authenticate;
  *     ),
  *     @OA\Response(response=200,description="OK")
  * )
+ *
+ *  * @OA\Post(
+ *     path="/api/auth/login",
+ *     tags={"Authenticate"},
+ *     summary="Login User" ,
+ *     @OA\RequestBody(required=true,
+ *          @OA\MediaType(
+ *              mediaType="application/json",
+ *              @OA\Schema(required={},
+ *                  @OA\Property(
+ *                      property="email",
+ *                      type="string"
+ *                  ),
+ *                  @OA\Property(
+ *                      property="password",
+ *                      type="string"
+ *                  ),*
+ *                  example={"email":"abbas@gmail.com" ,"password":"password" }
+ *              )
+ *          )
+ *     ),
+ *     @OA\Response(response=200,description="OK")
+ * )
  */
 class Authenticate
 {
