@@ -51,3 +51,9 @@ rs.initiate();
            ],
 ]
 ````
+___
+
+## seed database 
+``
+php artisan migrate --seed
+``
