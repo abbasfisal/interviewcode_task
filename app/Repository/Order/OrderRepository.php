@@ -103,7 +103,7 @@ class OrderRepository implements OrderRepositoryInterface
         ]);
         DB::commit();
 
-        return $order->refresh()->toArray();
+        return $order->refresh();
     }
 
     public function destroy(Order $order)
