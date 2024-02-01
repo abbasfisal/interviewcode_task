@@ -46,11 +46,10 @@ class OrderRepository implements OrderRepositoryInterface
         list($orderProducts, $productsToRemove, $mergedProducts) = $this->productMap($data['products'], $order);
 
         DB::beginTransaction();
-        $mergedProducts = $this->restoreInventoryOnOrderCancel($productsToRemove, $mergedProducts);
 
+        $mergedProducts = $this->restoreInventoryOnOrderCancel($productsToRemove, $mergedProducts);
         $mergedProductIds = array_keys($mergedProducts);
         $products = Product::query()->whereIn('_id', $mergedProductIds)->lockForUpdate()->get(); //get product by ids which is sent from frontEnd
-
         $order =$this->calculateProductInventoryAndOrderProducts($order, $products, $mergedProducts, $orderProducts);
 
         DB::commit();
