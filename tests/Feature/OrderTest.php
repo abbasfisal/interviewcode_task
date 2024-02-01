@@ -312,7 +312,6 @@ class OrderTest extends TestCase
 
         $firstOrderCount = rand(1, 9);
         $secondOrderCount = rand(1, 9);
-        dump($oldProductOneInventory, $oldProductTowInventory, $firstOrderCount, $secondOrderCount);
         $this->actingAs($loginUser)
             ->postJson(route('orders.store'),
                 [
@@ -358,10 +357,7 @@ class OrderTest extends TestCase
         $this->clearProducts();
         $products = Product::factory(1)->create(['inventory' => 20])->toArray();
 
-        dump('--- before products', $products);
-
         $firstOrderProductCount = 3;
-        dump('---first order count', $firstOrderProductCount);
 
         //create an order
         $this->actingAs(User::factory()->create())
@@ -416,8 +412,6 @@ class OrderTest extends TestCase
         //////////////////---------------------------create orders
         $this->clearProducts();
         $products = Product::factory(3)->create(['inventory' => 20])->toArray();
-
-        dump('--- before products', $products);
 
         $firstOrderProductCount = 3;
         $secondOrderProductCount = 3;
