@@ -47,8 +47,7 @@ class OrderRepository implements OrderRepositoryInterface
 
         DB::beginTransaction();
 
-        $mergedProducts = $this->restoreInventoryOnOrderCancel($productsToRemove, $mergedProducts);
-        $mergedProductIds = array_keys($mergedProducts);
+        $mergedProductIds = $this->restoreInventoryOnOrderCancel($productsToRemove, $mergedProducts);
         $products = Product::query()->whereIn('_id', $mergedProductIds)->lockForUpdate()->get(); //get product by ids which is sent from frontEnd
         $order =$this->calculateProductInventoryAndOrderProducts($order, $products, $mergedProducts, $orderProducts);
 
@@ -223,6 +222,6 @@ class OrderRepository implements OrderRepositoryInterface
             unset($mergedProducts[$dif['product_id']]);
         }
 
-        return $mergedProducts;
+        return array_keys($mergedProducts);
     }
 }
