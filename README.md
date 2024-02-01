@@ -1,25 +1,30 @@
 # Interview Coding
 
-
 ### you must set replicaset for mongo db to support transaction
 
 ## set replica steps
+
 ### step 1
+
 go to :`` nano /et/mongod.conf``
 
 ### step 2
+
 #### add this line into it:
 
 ```.apacheconf
 replication:
   replSetName: "rs0"
 ```
+
 ### step 3
+
 #### then in terminal
 
 ```
 mongosh
 ```
+
 ```
 rs.initiate();
 ```
@@ -29,9 +34,10 @@ rs.initiate();
 ``` rs.status()```
 
 ### step 4
+
 #### then add replica option into your laravel database.php file
 
-```` json
+```` 
 'mongodb' => [
     'driver' => 'mongodb',
     'host' => env('DB_HOST', '127.0.0.1'),
