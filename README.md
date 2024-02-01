@@ -44,5 +44,4 @@ rs.initiate();
             'database' => 'admin'
            ],
 ]
-
-``
+````
