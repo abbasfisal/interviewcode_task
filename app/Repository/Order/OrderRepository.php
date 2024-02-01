@@ -38,69 +38,21 @@ class OrderRepository implements OrderRepositoryInterface
 
     }
 
-    public function update(Order $order, array $data)
+    /**
+     * @throws \Exception
+     */
+    public function update(Order $order, array $data): Order
     {
-
-        $productMap = array_column($data['products'], null, 'product_id');
-
-        $orderProducts = array_column($order->products, null, 'product_id');
-
-        $productsToRemove = array_diff_key($orderProducts, $productMap);
-
-        $mergedProducts = array_merge($orderProducts, $productMap);
+        list($orderProducts, $productsToRemove, $mergedProducts) = $this->productMap($data['products'], $order);
 
         DB::beginTransaction();
-        foreach ($productsToRemove as $dif) {
-            $product = Product::query()
-                ->where('_id', $dif['product_id'])
-                ->lockForUpdate()->first();
-            $product->update(['inventory' => $product->inventory + $dif['count']]);
-
-            unset($mergedProducts[$dif['product_id']]);
-        }
+        $mergedProducts = $this->restoreInventoryOnOrderCancel($productsToRemove, $mergedProducts);
 
         $mergedProductIds = array_keys($mergedProducts);
         $products = Product::query()->whereIn('_id', $mergedProductIds)->lockForUpdate()->get(); //get product by ids which is sent from frontEnd
 
-        $updateOrderProducts = [];
-        $totalPrice = 0;
+        $order =$this->calculateProductInventoryAndOrderProducts($order, $products, $mergedProducts, $orderProducts);
 
-        /** @var Product $product */
-        foreach ($products as $product) {
-
-            $sentProductCount = $mergedProducts[$product['_id']]['count'];
-
-            if (isset($orderProducts[$product['_id']])) {
-
-                $orderProductCount = $orderProducts[$product['_id']]['count'];
-                if ($orderProductCount != $sentProductCount) {
-                    $calculateCount = $orderProductCount - $sentProductCount;
-                    $newInventoryCount = $product->inventory + ($calculateCount);
-                    if ($newInventoryCount <= 0) {
-                        throw new \Exception('Cannot update operation, inventory is zero');
-                    }
-                    $product->inventory = $newInventoryCount;
-                    $product->save();
-
-                }
-            } else {
-                $product->inventory = $product->inventory - ($sentProductCount);
-                $product->save();
-            }
-
-            $updateOrderProducts[] = [
-                'product_id' => $product->_id,
-                'name'       => $product->name,
-                'count'      => $sentProductCount,
-                'price'      => $product->price
-            ];
-            $totalPrice += $sentProductCount * $product->price;
-        }
-
-        $order->update([
-            'products'    => $updateOrderProducts,
-            'total_price' => $totalPrice
-        ]);
         DB::commit();
 
         return $order->refresh();
@@ -192,5 +144,86 @@ class OrderRepository implements OrderRepositoryInterface
             DB::rollBack();
             throw $exception;
         }
+    }
+
+    /**
+     * @param $products1
+     * @param Order $order
+     * @return array
+     */
+    public function productMap($products1, Order $order): array
+    {
+        $productMap = array_column($products1, null, 'product_id');
+
+        $orderProducts = array_column($order->products, null, 'product_id');
+
+        $productsToRemove = array_diff_key($orderProducts, $productMap);
+
+        $mergedProducts = array_merge($orderProducts, $productMap);
+        return array($orderProducts, $productsToRemove, $mergedProducts);
+    }
+
+
+    public function calculateProductInventoryAndOrderProducts(Order $order, Collection|array $products, array $mergedProducts, array $orderProducts): Order
+    {
+        $updateOrderProducts = [];
+        $totalPrice = 0;
+
+        /** @var Product $product */
+        foreach ($products as $product) {
+
+            $sentProductCount = $mergedProducts[$product['_id']]['count'];
+
+            if (isset($orderProducts[$product['_id']])) {
+
+                $orderProductCount = $orderProducts[$product['_id']]['count'];
+                if ($orderProductCount != $sentProductCount) {
+                    $calculateCount = $orderProductCount - $sentProductCount;
+                    $newInventoryCount = $product->inventory + ($calculateCount);
+                    if ($newInventoryCount <= 0) {
+                        throw new \Exception('Cannot update operation, inventory is zero');
+                    }
+                    $product->inventory = $newInventoryCount;
+                    $product->save();
+
+                }
+            } else {
+                $product->inventory = $product->inventory - ($sentProductCount);
+                $product->save();
+            }
+
+            $updateOrderProducts[] = [
+                'product_id' => $product->_id,
+                'name'       => $product->name,
+                'count'      => $sentProductCount,
+                'price'      => $product->price
+            ];
+            $totalPrice += $sentProductCount * $product->price;
+        }
+        $order->update([
+            'products'    => $updateOrderProducts,
+            'total_price' => $totalPrice
+        ]);
+
+        return $order->refresh();
+    }
+
+    /**
+     * @param array $productsToRemove
+     * @param array $mergedProducts
+     * @return array
+     */
+    public function restoreInventoryOnOrderCancel(array $productsToRemove, array $mergedProducts): array
+    {
+        foreach ($productsToRemove as $dif) {
+            $product = Product::query()
+                ->where('_id', $dif['product_id'])
+                ->lockForUpdate()->first();
+            $product->update(['inventory' => $product->inventory + $dif['count']]);
+
+            unset($mergedProducts[$dif['product_id']]);
+        }
+
+        return $mergedProducts;
     }
 }
