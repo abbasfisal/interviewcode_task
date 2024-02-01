@@ -351,4 +351,384 @@ class OrderTest extends TestCase
         $this->assertDatabaseHas(Product::class, ['_id' => $products[1]->_id, 'inventory' => $oldProductTowInventory]);
     }
 
+    public function test_update_order_with_equals_order_count_3_3()
+    {
+        // update with equal => 3 = 3
+        //////////////////---------------------------create orders
+        $this->clearProducts();
+        $products = Product::factory(1)->create(['inventory' => 20])->toArray();
+
+        dump('--- before products', $products);
+
+        $firstOrderProductCount = 3;
+        dump('---first order count', $firstOrderProductCount);
+
+        //create an order
+        $this->actingAs(User::factory()->create())
+            ->postJson(route('orders.store'),
+                [
+                    'products' => [
+                        [
+                            'product_id' => $products[0]['_id'],
+                            'count'      => $firstOrderProductCount,
+                        ]
+
+                    ]
+                ]
+            );
+
+        $firstProductInventory = $products[0]['inventory'] - $firstOrderProductCount;
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[0]['_id'], 'inventory' => $firstProductInventory]);
+
+        $this->assertDatabaseHas(Order::class, [
+            'user_id'  => Auth::id(),
+            'products' => [
+                ['product_id' => $products[0]['_id'], 'name' => $products[0]['name'], 'count' => $firstOrderProductCount, 'price' => $products[0]['price']],
+            ]
+        ]);
+
+        /** @var Order $order */
+        $order = Order::query()->where('user_id', Auth::id())->first();
+
+        ///////--------------------------------update order
+        $updateFirstOrderProductCount = 3; // 3 = 3
+
+       $this->patchJson(route('orders.update', $order->_id), [
+            'products' => [
+                [
+                    'product_id' => $products[0]['_id'],
+                    'count'      => $updateFirstOrderProductCount
+                ]
+            ]
+        ]);
+
+        $this->assertDatabaseHas(Order::class, [
+            'user_id'  => Auth::id(),
+            'products' => [
+                ['product_id' => $products[0]['_id'], 'name' => $products[0]['name'], 'count' => $updateFirstOrderProductCount, 'price' => $products[0]['price']],
+            ]
+        ]);
+      $this->assertDatabaseHas(Product::class, ['_id' => $products[0]['_id'], 'inventory' => $firstProductInventory]);
+    }
+
+    public function test_update_order_with_new_order_and_positive_count()
+    {
+        //////////////////---------------------------create orders
+        $this->clearProducts();
+        $products = Product::factory(3)->create(['inventory' => 20])->toArray();
+
+        dump('--- before products', $products);
+
+        $firstOrderProductCount = 3;
+        $secondOrderProductCount = 3;
+
+        //create an order
+        $this->actingAs(User::factory()->create())
+            ->postJson(route('orders.store'),
+                [
+                    'products' => [
+                        [
+                            'product_id' => $products[0]['_id'],
+                            'count'      => $firstOrderProductCount,
+                        ]
+                        ,
+                        [
+                            'product_id' => $products[1]['_id'],
+                            'count'      => $secondOrderProductCount,
+                        ]
+                    ]
+                ]
+            );
+
+        $firstProductInventory = $products[0]['inventory'] - $firstOrderProductCount;
+        $secondProductInventory = $products[1]['inventory'] - $secondOrderProductCount;
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[0]['_id'], 'inventory' => $firstProductInventory]);
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[1]['_id'], 'inventory' => $secondProductInventory]);
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[2]['_id'], 'inventory' => 20]);
+
+        $this->assertDatabaseHas(Order::class, [
+            'user_id'  => Auth::id(),
+            'products' => [
+                ['product_id' => $products[0]['_id'], 'name' => $products[0]['name'], 'count' => $firstOrderProductCount, 'price' => $products[0]['price']],
+                ['product_id' => $products[1]['_id'], 'name' => $products[1]['name'], 'count' => $secondOrderProductCount, 'price' => $products[1]['price']]
+            ]
+        ]);
+
+        /** @var Order $order */
+        $order = Order::query()->where('user_id', Auth::id())->first();
+
+        ///////--------------------------------update order
+        $updateFirstOrderProductCount = 5;
+        $newOrderCount = 5;
+
+        $this->patchJson(route('orders.update', $order->_id), [
+            'products' => [
+                [
+                    'product_id' => $products[0]['_id'],
+                    'count'      => $updateFirstOrderProductCount
+                ]
+                ,
+                [
+                    'product_id' => $products[2]['_id'], //new product
+                    'count'      => $newOrderCount
+                ]
+            ]
+        ]);
+
+        $this->assertDatabaseHas(Order::class, [
+            'user_id'     => Auth::id(),
+            'products'    => [
+                ['product_id' => $products[0]['_id'], 'name' => $products[0]['name'], 'count' => $updateFirstOrderProductCount, 'price' => $products[0]['price']],
+                ['product_id' => $products[2]['_id'], 'name' => $products[2]['name'], 'count' => $newOrderCount, 'price' => $products[2]['price']]
+            ],
+            'total_price' => ($updateFirstOrderProductCount * $products[0]['price']) + ($newOrderCount * $products[2]['price'])
+        ]);
+
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[0]['_id'], 'inventory' => 20 - $updateFirstOrderProductCount]);
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[1]['_id'], 'inventory' => $secondProductInventory + $secondOrderProductCount]);
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[2]['_id'], 'inventory' => 20 - $newOrderCount]);
+
+    }
+
+    public function test_update_order_with_equals_and_new_product()
+    {
+        // update with equal => 3 = 3
+        // update with new product => 5
+        //////////////////---------------------------create orders
+        $this->clearProducts();
+        $products = Product::factory(2)->create(['inventory' => 20])->toArray();
+
+        $firstOrderProductCount = 3;
+
+        //create an order
+        $this->actingAs(User::factory()->create())
+            ->postJson(route('orders.store'),
+                [
+                    'products' => [
+                        [
+                            'product_id' => $products[0]['_id'],
+                            'count'      => $firstOrderProductCount,
+                        ]
+                    ]
+                ]
+            );
+
+        $firstProductInventory = $products[0]['inventory'] - $firstOrderProductCount;
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[0]['_id'], 'inventory' => $firstProductInventory]);
+
+        //second product
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[1]['_id'], 'inventory' => 20]);
+
+        $this->assertDatabaseHas(Order::class, [
+            'user_id'  => Auth::id(),
+            'products' => [
+                ['product_id' => $products[0]['_id'], 'name' => $products[0]['name'], 'count' => $firstOrderProductCount, 'price' => $products[0]['price']],
+            ]
+        ]);
+
+        /** @var Order $order */
+        $order = Order::query()->where('user_id', Auth::id())->first();
+
+        ///////--------------------------------update order
+        $updateFirstOrderProductCount = 3; // 3 = 3
+        $newOrderCount = 5;
+
+        $this->patchJson(route('orders.update', $order->_id), [
+            'products' => [
+                [
+                    'product_id' => $products[0]['_id'],
+                    'count'      => $updateFirstOrderProductCount
+                ],
+                [
+                    'product_id' => $products[1]['_id'], //new product
+                    'count'      => $newOrderCount
+                ]
+            ]
+        ]);
+
+        $this->assertDatabaseHas(Order::class, [
+            'user_id'  => Auth::id(),
+            'products' => [
+                ['product_id' => $products[0]['_id'], 'name' => $products[0]['name'], 'count' => $updateFirstOrderProductCount, 'price' => $products[0]['price']],
+                ['product_id' => $products[1]['_id'], 'name' => $products[1]['name'], 'count' => $newOrderCount, 'price' => $products[1]['price']]
+            ]
+        ]);
+
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[0]['_id'], 'inventory' => $firstProductInventory]);
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[1]['_id'], 'inventory' => (20 - $newOrderCount)]);
+    }
+
+    public function test_update_order_with_new_order()
+    {
+        // update with new order => old order must be removed (add to product inventory )
+
+        //////////////////---------------------------create orders
+        $this->clearProducts();
+        $products = Product::factory(2)->create(['inventory' => 20])->toArray();
+
+        $firstOrderProductCount = 3;
+
+        //create an order
+        $this->actingAs(User::factory()->create())
+            ->postJson(route('orders.store'),
+                [
+                    'products' => [
+                        [
+                            'product_id' => $products[0]['_id'],
+                            'count'      => $firstOrderProductCount,
+                        ]
+                    ]
+                ]
+            );
+
+        $firstProductInventory = $products[0]['inventory'] - $firstOrderProductCount;
+
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[0]['_id'], 'inventory' => $firstProductInventory]);
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[1]['_id'], 'inventory' => 20]);
+
+        $this->assertDatabaseHas(Order::class, [
+            'user_id'  => Auth::id(),
+            'products' => [
+                ['product_id' => $products[0]['_id'], 'name' => $products[0]['name'], 'count' => $firstOrderProductCount, 'price' => $products[0]['price']],
+            ]
+        ]);
+
+        /** @var Order $order */
+        $order = Order::query()->where('user_id', Auth::id())->first();
+
+       ///////--------------------------------update order
+        $newOrderCount = 3;
+        $this->patchJson(route('orders.update', $order->_id), [
+            'products' => [
+                [
+                    'product_id' => $products[1]['_id'], //new product
+                    'count'      => $newOrderCount
+                ]
+            ]
+        ]);
+
+        $this->assertDatabaseHas(Order::class, [
+            'user_id'  => Auth::id(),
+            'products' => [
+                ['product_id' => $products[1]['_id'], 'name' => $products[1]['name'], 'count' => $newOrderCount, 'price' => $products[1]['price']]
+            ]
+        ]);
+
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[0]['_id'], 'inventory' => $firstProductInventory + $firstOrderProductCount]);
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[1]['_id'], 'inventory' => (20-$newOrderCount)]);
+    }
+
+    public function test_update_order_with_new_value_3_change_to_5_decrease_product_inventory()
+    {
+        // stored = 3 -->must change to 5
+        //////////////////---------------------------create orders
+        $this->clearProducts();
+        $products = Product::factory(1)->create(['inventory' => 20])->toArray();
+        $firstOrderProductCount = 3;
+
+        //create an order
+        $this->actingAs(User::factory()->create())
+            ->postJson(route('orders.store'),
+                [
+                    'products' => [
+                        [
+                            'product_id' => $products[0]['_id'],
+                            'count'      => $firstOrderProductCount,
+                        ]
+                    ]
+                ]
+            );
+
+        $firstProductInventory = $products[0]['inventory'] - $firstOrderProductCount;
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[0]['_id'], 'inventory' => $firstProductInventory]);
+
+        $this->assertDatabaseHas(Order::class, [
+            'user_id'  => Auth::id(),
+            'products' => [
+                ['product_id' => $products[0]['_id'], 'name' => $products[0]['name'], 'count' => $firstOrderProductCount, 'price' => $products[0]['price']],
+            ]
+        ]);
+
+        /** @var Order $order */
+        $order = Order::query()->where('user_id', Auth::id())->first();
+
+        ///////--------------------------------update order
+        $updateFirstOrderProductCount = 5;
+        $this->patchJson(route('orders.update', $order->_id), [
+            'products' => [
+                [
+                    'product_id' => $products[0]['_id'],
+                    'count'      => $updateFirstOrderProductCount
+                ]
+            ]
+        ]);
+
+        $this->assertDatabaseHas(Order::class, [
+            'user_id'     => Auth::id(),
+            'products'    => [
+                ['product_id' => $products[0]['_id'], 'name' => $products[0]['name'], 'count' => $updateFirstOrderProductCount, 'price' => $products[0]['price']],
+            ],
+            'total_price' => $updateFirstOrderProductCount * $products[0]['price']
+        ]);
+
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[0]['_id'], 'inventory' => 15]);
+    }
+
+    public function test_update_order_with_new_value_3_change_to_2_increase_product_inventory()
+    {
+        // stored = 3 -->must change to 2
+        //////////////////---------------------------create orders
+        $this->clearProducts();
+        $products = Product::factory(1)->create(['inventory' => 20])->toArray();
+        $firstOrderProductCount = 3;
+
+        //create an order
+        $this->actingAs(User::factory()->create())
+            ->postJson(route('orders.store'),
+                [
+                    'products' => [
+                        [
+                            'product_id' => $products[0]['_id'],
+                            'count'      => $firstOrderProductCount,
+                        ]
+                    ]
+                ]
+            );
+
+        $firstProductInventory = $products[0]['inventory'] - $firstOrderProductCount;
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[0]['_id'], 'inventory' => $firstProductInventory]);
+
+        $this->assertDatabaseHas(Order::class, [
+            'user_id'  => Auth::id(),
+            'products' => [
+                ['product_id' => $products[0]['_id'], 'name' => $products[0]['name'], 'count' => $firstOrderProductCount, 'price' => $products[0]['price']],
+            ]
+        ]);
+
+        /** @var Order $order */
+        $order = Order::query()->where('user_id', Auth::id())->first();
+
+        ///////--------------------------------update order
+        $updateFirstOrderProductCount = 2;
+        $this->patchJson(route('orders.update', $order->_id), [
+            'products' => [
+                [
+                    'product_id' => $products[0]['_id'],
+                    'count'      => $updateFirstOrderProductCount
+                ]
+            ]
+        ]);
+
+        $this->assertDatabaseHas(Order::class, [
+            'user_id'     => Auth::id(),
+            'products'    => [
+                ['product_id' => $products[0]['_id'], 'name' => $products[0]['name'], 'count' => $updateFirstOrderProductCount, 'price' => $products[0]['price']],
+            ],
+            'total_price' => $updateFirstOrderProductCount * $products[0]['price']
+        ]);
+
+        $this->assertDatabaseHas(Product::class, ['_id' => $products[0]['_id'], 'inventory' => 18]);
+    }
+
 }
+
