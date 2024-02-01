@@ -67,6 +67,15 @@ namespace App\Documents\Product;
  *     ),
  *     @OA\Response(response=200,description="OK")
  * )
+ *
+ * @OA\Delete(
+ *     path="/api/products/{id}/",
+ *     tags={"Product"},
+ *     summary="Delete a Product" ,
+ *     security={{"bearerAuth":{}}},
+ *     @OA\Parameter(name="id",in="path",required=true,description="product id",@OA\Schema(type="string")),
+ *     @OA\Response(response=200,description="OK")
+ * )
  */
 class Product
 {
