@@ -26,7 +26,7 @@ class OrderRepository implements OrderRepositoryInterface
      */
     public function store(array $data)
     {
-        DB::beginTransaction();
+
 
         $orderProducts = array_column($data['products'], null, 'product_id');
 
@@ -111,6 +111,7 @@ class OrderRepository implements OrderRepositoryInterface
      */
     public function updateProductAndCreateOrder(Collection|array $products, array $orderProducts, int $total_price): \Illuminate\Database\Eloquent\Builder|Model
     {
+        DB::beginTransaction();
         try {
             $product_data = [];
             foreach ($products as $item) {
