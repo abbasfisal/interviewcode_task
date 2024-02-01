@@ -47,7 +47,11 @@ class OrderController extends Controller
 
     public function update(UpdateOrderRequest $request, Order $order)
     {
-        //
+       $order = $this->orderRepository->update($order , $request->validated());
+        Response::json([
+            'message' => 'order updated',
+            'data'    => new OrderResource($order)
+        ]);
     }
 
     public function destroy(Order $order, OrderShowRequest $request): JsonResponse
